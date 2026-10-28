@@ -26,38 +26,49 @@ public sealed partial class YardSystem
         public bool Active;
     }
 
-    internal bool TryCreateCircuitTarget(int x, int y, out CircuitKeybindTarget target)
+    internal bool TryCreateCircuitTarget(int x, int y, out CircuitKeybindTarget target, bool allowWorld = false)
     {
         target = default;
-        if (!TryStorageYard(x, y, out Yard yard))
+        bool inYard = TryStorageYard(x, y, out Yard yard);
+        if (!inYard && (!allowWorld || !PlayableBounds.Contains(x, y)))
             return false;
         Tile tile = Main.tile[x, y];
         if (!tile.HasTile || TileLoader.GetTile(tile.TileType) is not KeybindCircuitTile circuit)
             return false;
         Rectangle bounds = circuit.GetCircuitBounds(x, y);
-        if (!bounds.Contains(x, y) || !ValidCircuitBounds(bounds, yard.Bounds))
+        if (!bounds.Contains(x, y) || !ValidCircuitBounds(bounds, inYard ? yard.Bounds : PlayableBounds))
             return false;
-        Point cell = yard.Coordinates.StorageToLocalTile(bounds.Location);
-        target = new CircuitKeybindTarget(Main.ActiveWorldFileData.UniqueId, yard.Id, cell, circuit.FullName);
+        Point cell = inYard ? yard.Coordinates.StorageToLocalTile(bounds.Location) : bounds.Location;
+        target = new CircuitKeybindTarget(Main.ActiveWorldFileData.UniqueId, yard?.Id ?? Guid.Empty, cell, circuit.FullName);
         return true;
     }
 
     internal bool TryResolveCircuitTarget(CircuitKeybindTarget target, out Point storage,
-        out KeybindCircuitTile circuit, out Yard yard)
+        out KeybindCircuitTile circuit, out Yard yard, bool allowWorld = false)
     {
         storage = target.Cell;
         circuit = null;
         yard = null;
-        if (target.WorldId != Main.ActiveWorldFileData.UniqueId || target.YardId == Guid.Empty
-            || !TryGet(target.YardId, out yard) || !yard.IsLoaded
-            || target.Cell.X < 0 || target.Cell.Y < 0 || target.Cell.X >= yard.Width || target.Cell.Y >= yard.Height)
+        if (target.WorldId != Main.ActiveWorldFileData.UniqueId)
             return false;
-        storage = yard.Coordinates.LocalTileToStorage(target.Cell);
+        Rectangle area;
+        if (target.YardId == Guid.Empty) {
+            if (!allowWorld || !PlayableBounds.Contains(storage))
+                return false;
+            area = PlayableBounds;
+        }
+        else {
+            if (!TryGet(target.YardId, out yard) || !yard.IsLoaded
+                || target.Cell.X < 0 || target.Cell.Y < 0 || target.Cell.X >= yard.Width || target.Cell.Y >= yard.Height)
+                return false;
+            storage = yard.Coordinates.LocalTileToStorage(target.Cell);
+            area = yard.Bounds;
+        }
         Tile tile = Main.tile[storage.X, storage.Y];
         if (!tile.HasTile || TileLoader.GetTile(tile.TileType) is not KeybindCircuitTile found || found.FullName != target.TileName)
             return false;
         Rectangle bounds = found.GetCircuitBounds(storage.X, storage.Y);
-        if (bounds.Location != storage || !ValidCircuitBounds(bounds, yard.Bounds))
+        if (bounds.Location != storage || !ValidCircuitBounds(bounds, area))
             return false;
         circuit = found;
         return true;
@@ -65,6 +76,14 @@ public sealed partial class YardSystem
 
     private static bool ValidCircuitBounds(Rectangle bounds, Rectangle area) =>
         bounds.Width is > 0 and <= byte.MaxValue && bounds.Height is > 0 and <= byte.MaxValue && area.Contains(bounds);
+
+    // Configuration may address world tiles; activation callers deliberately
+    // keep allowWorld=false so world keys/wires never enter the active state.
+    private static void MoveLocalCircuitBindings(Guid fromYard, Rectangle fromBounds, Guid toYard, Point toOrigin)
+    {
+        if (Main.netMode != NetmodeID.Server)
+            Main.LocalPlayer.GetModPlayer<CircuitKeybindPlayer>().MoveBindings(fromYard, fromBounds, toYard, toOrigin);
+    }
 
     internal bool IsCircuitActive(CircuitKeybindTarget target) =>
         circuitActivations.TryGetValue(target, out CircuitActivationState state) && state.Active;

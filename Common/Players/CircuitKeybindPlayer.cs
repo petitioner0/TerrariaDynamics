@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.GameInput;
@@ -34,6 +35,19 @@ public sealed class CircuitKeybindPlayer : ModPlayer
     }
 
     internal Keys GetBinding(CircuitKeybindTarget target) => bindings.GetValueOrDefault(target, Keys.None);
+
+    internal void MoveBindings(Guid fromYard, Rectangle fromBounds, Guid toYard, Point toOrigin)
+    {
+        Guid worldId = Main.ActiveWorldFileData.UniqueId;
+        foreach (var binding in bindings.ToArray()) {
+            CircuitKeybindTarget target = binding.Key;
+            if (target.WorldId != worldId || target.YardId != fromYard || !fromBounds.Contains(target.Cell))
+                continue;
+            bindings.Remove(target);
+            Point cell = target.Cell - fromBounds.Location + toOrigin;
+            bindings[target with { YardId = toYard, Cell = cell }] = binding.Value;
+        }
+    }
 
     internal void SetBinding(CircuitKeybindTarget target, Keys key)
     {

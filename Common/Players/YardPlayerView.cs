@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 using Terraria;
+using TerrariaDynamics.Common.Physics;
 using TerrariaDynamics.Common.TileYards;
 
 namespace TerrariaDynamics.Common.Players;
@@ -28,9 +29,14 @@ internal readonly struct YardPlayerView
         Gravity = pose.WorldVectorToLocal(new Vector2(0, player.gravDir));
     }
 
-    public bool InReach(Point localTile, int rangeX, int rangeY) =>
-        localTile.X >= (Center.X - HalfSize.X) / YardCoordinates.TileSize - rangeX
-        && localTile.X <= (Center.X + HalfSize.X) / YardCoordinates.TileSize + rangeX - 1
-        && localTile.Y >= (Center.Y - HalfSize.Y) / YardCoordinates.TileSize - rangeY
-        && localTile.Y <= (Center.Y + HalfSize.Y) / YardCoordinates.TileSize + rangeY - 2;
+    public bool InReach(Point localTile, int rangeX, int rangeY)
+    {
+        // Yard collision stops the player a fraction of a pixel off the surface.
+        // Keep that contact gap from excluding the last reachable tile row/column.
+        float tolerance = YardCollisionGeometry.ContactTolerance / YardCoordinates.TileSize;
+        Vector2 min = (Center - HalfSize) / YardCoordinates.TileSize - new Vector2(rangeX, rangeY);
+        Vector2 max = (Center + HalfSize) / YardCoordinates.TileSize + new Vector2(rangeX - 1, rangeY - 2);
+        return localTile.X >= min.X - tolerance && localTile.X <= max.X + tolerance
+            && localTile.Y >= min.Y - tolerance && localTile.Y <= max.Y + tolerance;
+    }
 }

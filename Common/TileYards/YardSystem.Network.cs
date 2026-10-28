@@ -348,7 +348,7 @@ public sealed partial class YardSystem
     });
 
     private void PublishReturned(Guid id, Rectangle bounds) => Publish(() => {
-        var tag = new TagCompound { ["id"] = id.ToString("D") };
+        var tag = new TagCompound { ["id"] = id.ToString("D"), ["tileX"] = bounds.X, ["tileY"] = bounds.Y };
         YardNetworkObjects.Save(tag, regions.Values, bounds);
         try { SendEvent(YardEventKind.Returned, tag); }
         finally { BroadcastWorldArea(bounds); }
@@ -511,6 +511,8 @@ public sealed partial class YardSystem
                     yard.MarkLoaded(count);
                     TagCompound saved = tag.GetList<TagCompound>("yards").First(entry => entry.GetString("id") == yard.Id.ToString("D"));
                     yard.ApplyRemoteState(yard.WorldPosition, yard.Rotation, saved.GetBool("returning"));
+                    if (kind == YardEventKind.Created)
+                        MoveLocalCircuitBindings(Guid.Empty, yard.Source, yard.Id, Point.Zero);
                 }
                 catch (Exception error) {
                     Mod.Logger.Error($"Network Yard {yard.Id} could not be loaded. Payload preserved.", error);
@@ -522,6 +524,11 @@ public sealed partial class YardSystem
             if (!Guid.TryParse(tag.GetString("id"), out Guid id) || !TryGet(id, out Yard yard))
                 throw new InvalidDataException("Yard event refers to an unknown ID.");
             if (kind == YardEventKind.Returned) {
+                Point origin = new(tag.GetInt("tileX"), tag.GetInt("tileY"));
+                if (!tag.ContainsKey("tileX") || !tag.ContainsKey("tileY")
+                    || !PlayableBounds.Contains(new Rectangle(origin.X, origin.Y, yard.Width, yard.Height)))
+                    throw new InvalidDataException("Invalid Yard return position.");
+                MoveLocalCircuitBindings(yard.Id, new Rectangle(0, 0, yard.Width, yard.Height), Guid.Empty, origin);
                 physicsPoseSequences.Remove(id);
                 ClearStorage(yard);
                 regions.Remove(id);

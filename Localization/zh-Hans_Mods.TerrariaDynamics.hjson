@@ -16,7 +16,8 @@ Items: {
 			'''
 			可贴在实体方块的上下左右四面，支撑被破坏时掉落
 			在主世界和 Yard 中均无碰撞
-			将它和支撑方块一起采集进 Yard，右键配置快捷键
+			主世界和 Yard 中均可右键配置快捷键，采集和放回时保留绑定
+			只有将它和支撑方块一起采集进 Yard 后才能激活
 			深度绑定到该 Yard 后，按住快捷键沿箭头方向持续施力
 			力作用于推进器自身位置，方向随 Yard 旋转，松开停止施力
 			原版电线脉冲也能激活一次物理更新的推力
@@ -46,11 +47,7 @@ Items: {
 	}
 }
 
-Tiles: {
-	YardThrusterTile: {
-		MapEntry: Yard 推进器
-	}
-}
+Tiles.YardThrusterTile.MapEntry: Yard 推进器
 
 Messages: {
 	ServerAuthority: Yard 的世界修改必须由服务器执行。

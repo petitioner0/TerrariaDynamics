@@ -4,8 +4,8 @@ using Terraria.ModLoader.IO;
 
 namespace TerrariaDynamics.Common.Circuitry;
 
-// Targets belong to a Yard in a specific world. Cells use Yard-local tile
-// coordinates, never rendered positions or reusable storage addresses.
+// An empty YardId identifies a main-world tile. Otherwise Cell is Yard-local;
+// neither form uses rendered positions or reusable storage addresses.
 internal readonly record struct CircuitKeybindTarget(Guid WorldId, Guid YardId, Point Cell, string TileName)
 {
     public TagCompound Save() => new() {
@@ -20,7 +20,7 @@ internal readonly record struct CircuitKeybindTarget(Guid WorldId, Guid YardId, 
     {
         target = default;
         if (!Guid.TryParse(tag.GetString("worldId"), out Guid worldId) || worldId == Guid.Empty
-            || !Guid.TryParse(tag.GetString("yardId"), out Guid yardId) || yardId == Guid.Empty)
+            || !Guid.TryParse(tag.GetString("yardId"), out Guid yardId))
             return false;
         Point cell = new(tag.GetInt("x"), tag.GetInt("y"));
         string tileName = tag.GetString("tileName");

@@ -181,6 +181,8 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
             }
             // Ownership changes only after the transfer commits. Cosmetic updates
             // must never leave a filled blueprint pointing at an already emptied Yard.
+            MoveLocalCircuitBindings(region.Id, new Rectangle(0, 0, region.Width, region.Height),
+                Guid.Empty, placedBounds.Location);
             regions.Remove(region.Id);
             YardLighting.Remove(region.Id);
             ClearReturnedBlueprints(region.Id);
@@ -298,6 +300,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
                 region.Invalidate(removed: true);
                 throw;
             }
+            MoveLocalCircuitBindings(Guid.Empty, source, region.Id, Point.Zero);
             WorldRevision++;
             RefreshYardFrames(region);
             RefreshSourceBorder(source);
