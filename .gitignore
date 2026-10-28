@@ -1,0 +1,8 @@
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+lib/Box2D.NET.dll
+
+AGENTS.md

@@ -1,0 +1,87 @@
+// The filename supplies the Mods.TerrariaDynamics prefix.
+CircuitKeybinds: {
+	Title: Circuit key binding
+	CurrentKey: Current key: {0}
+	Unbound: Unbound
+	Bind: Bind next key
+	Listening: Press a key (Esc to cancel)
+	Clear: Clear binding
+	Close: Close
+}
+
+Items: {
+	YardThruster: {
+		DisplayName: Yard Thruster
+		Tooltip:
+			'''
+			Attaches to any of the four sides of a solid block; drops when its support is removed
+			Has no collision in the world or in a Yard
+			Capture it and its supporting block into a Yard, then right-click to bind a key
+			While deeply bound to that Yard, hold the key to apply continuous thrust in the arrow's direction
+			Thrust acts at the device, rotates with the Yard, and stops when released
+			Vanilla wire pulses also activate it for one physics update
+			'''
+	}
+
+	YardForceTester: {
+		DisplayName: Yard Force Tester
+		Tooltip:
+			'''
+			Hold right-click, then press arrow keys or movement keys to push every loaded yard
+			Hold a direction for continuous force; release right-click or change items to stop
+			Applies force at each yard's center of mass, scaled by mass for consistent acceleration
+			Forces use world directions; movement keys control yards while right-click is held
+			'''
+	}
+
+	Blueprint: {
+		DisplayName: Yard Blueprint
+		Tooltip:
+			'''
+			Left-click two corners to move blocks, walls, wires and attachments into a yard
+			Right-click an empty blueprint to cancel; left-click a filled blueprint for info, right-click to return its yard at its current position
+			Return snaps to the nearest tile upright; once stable, replaces the whole region and drops existing blocks
+			Supports single-player and multiplayer; solid yard tiles move and collide with terrain and other yards
+			'''
+	}
+}
+
+Tiles: {
+	YardThrusterTile: {
+		MapEntry: Yard Thruster
+	}
+}
+
+Messages: {
+	ServerAuthority: Yard world changes must be performed by the server.
+	SyncWaiting: Waiting for the server to synchronize yards.
+	RequestSent: Yard request sent to the server.
+	RequestPending: Waiting for the server to finish the previous yard request.
+	RequestTimedOut: The yard request timed out. Synchronizing with the server again.
+	InvalidRequest: The held blueprint changed or the yard request is no longer valid. Please try again.
+	WorldBusy: The world is saving or generating. Please try again shortly.
+	OutsideWorld: Both corners must be inside the playable world.
+	TooLarge: The selection may contain at most {0} cells, including air.
+	YardFull: No yard space remains below the Int16 coordinate limit (32767).
+	YardOccupied: The destination contains unregistered tile data; nothing was moved.
+	StatefulTile: TileEntities are not supported yet; nothing was moved.
+	MissingContainerData: A chest or sign has no matching data record; nothing was moved.
+	PartialFurniture: Select the whole furniture object, including all of its tiles.
+	EmptySelection: The selection contains no blocks, walls, wires, actuators or liquid.
+	AssemblyFailed: Unable to assemble the yard: {0}
+	Returned: Returned {0} populated cells to the world at ({1}, {2}). The blueprint can be reused.
+	ReturnOutsideWorld: The yard's current position is outside the playable world; nothing was moved.
+	ReturnWaiting: Snapped to the nearest world tile; checking stability. Returning will break the destination area and drop its items.
+	ReturnMoved: The yard's anchor moved to another tile. Return cancelled; try again once stable.
+	ReturnFailed: Unable to return the yard: {0}
+	FirstCorner: First corner: ({0}, {1}). Left-click the opposite corner; right-click to cancel.
+	SelectionCancelled: Selection cancelled.
+	Assembled: Moved {0} populated cells. Region: {1} x {2}, storage: ({3}, {4}). YardId: {5}
+	YardInfo: Yard {0}: storage ({1}, {2}), {3} x {4}
+	Dimensions: Size: {0} x {1} tiles; storage: ({2}, {3})
+	MissingYard: Yard {0} is not present in this world.
+	Unavailable: Yard unavailable; its saved data is preserved. Check the log.
+	RenderOn: Yard rendering enabled.
+	RenderOff: Yard rendering disabled; the original world tiles are now visibly empty.
+	YardCount: Yards in this world: {0}
+}

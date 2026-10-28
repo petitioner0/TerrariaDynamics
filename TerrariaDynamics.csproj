@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		<TargetFramework Condition="'$(TargetFramework)' == ''">net8.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Box2D.NET" Version="3.1.654" GeneratePathProperty="true" />
+	</ItemGroup>
+
+	<!-- tModLoader resolves dllReferences from the mod source's lib directory. -->
+	<Target Name="StageBox2DDependency" BeforeTargets="CoreCompile;BuildMod" Condition="'$(DesignTimeBuild)' != 'true'">
+		<Copy SourceFiles="$(PkgBox2D_NET)/lib/net8.0/Box2D.NET.dll"
+			  DestinationFolder="$(MSBuildProjectDirectory)/lib"
+			  SkipUnchangedFiles="true" />
+	</Target>
+
+</Project>

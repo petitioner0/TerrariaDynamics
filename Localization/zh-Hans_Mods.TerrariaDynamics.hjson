@@ -1,0 +1,87 @@
+// The filename supplies the Mods.TerrariaDynamics prefix.
+CircuitKeybinds: {
+	Title: 电路快捷键
+	CurrentKey: 当前按键：{0}
+	Unbound: 未绑定
+	Bind: 绑定下一个按键
+	Listening: 请按一个键（Esc 取消）
+	Clear: 清除绑定
+	Close: 关闭
+}
+
+Items: {
+	YardThruster: {
+		DisplayName: Yard 推进器
+		Tooltip:
+			'''
+			可贴在实体方块的上下左右四面，支撑被破坏时掉落
+			在主世界和 Yard 中均无碰撞
+			将它和支撑方块一起采集进 Yard，右键配置快捷键
+			深度绑定到该 Yard 后，按住快捷键沿箭头方向持续施力
+			力作用于推进器自身位置，方向随 Yard 旋转，松开停止施力
+			原版电线脉冲也能激活一次物理更新的推力
+			'''
+	}
+
+	YardForceTester: {
+		DisplayName: Yard 施力测试器
+		Tooltip:
+			'''
+			按住右键，再按方向键或移动键，推动当前所有已加载的 Yard
+			按住方向持续施力；松开右键或切换物品停止施力
+			力作用于各 Yard 的质心，按质量缩放以获得一致的加速度
+			方向以世界坐标为准；按住右键期间，移动键用于控制 Yard
+			'''
+	}
+
+	Blueprint: {
+		DisplayName: 结构蓝图
+		Tooltip:
+			'''
+			左键依次选取两个对角，将方块、背景墙、电线及附加数据搬入 Yard
+			空蓝图右键取消框选；已绑定的蓝图左键查看信息，右键按当前所在位置放回主世界
+			放回时吸附到最近格子并恢复初始朝向；稳定后强制替换整个选区，原有方块正常掉落
+			支持单人与多人联机，Yard 的实体方块会运动，并与地形及其他 Yard 碰撞
+			'''
+	}
+}
+
+Tiles: {
+	YardThrusterTile: {
+		MapEntry: Yard 推进器
+	}
+}
+
+Messages: {
+	ServerAuthority: Yard 的世界修改必须由服务器执行。
+	SyncWaiting: 正在等待服务器同步 Yard 数据。
+	RequestSent: 已向服务器发送 Yard 操作请求。
+	RequestPending: 正在等待服务器完成上一次 Yard 操作。
+	RequestTimedOut: Yard 请求超时，正在重新同步服务器数据。
+	InvalidRequest: 手持蓝图已改变或 Yard 请求已失效，请重试。
+	WorldBusy: 世界正在保存或生成，请稍后重试。
+	OutsideWorld: 两个角都必须位于正常世界内部。
+	TooLarge: 选区最多包含 {0} 格（包括空气）。
+	YardFull: Yard 已没有足够空间，坐标不能超过 Int16 上限 32767。
+	YardOccupied: 目标区域存在未登记的 Tile 数据，本次没有搬运。
+	StatefulTile: 暂不支持 TileEntity，本次没有搬运。
+	MissingContainerData: 箱子或告示牌缺少对应的数据记录，本次没有搬运。
+	PartialFurniture: 请完整框选家具的所有组成方块。
+	EmptySelection: 选区中没有方块、背景墙、电线、致动器或液体。
+	AssemblyFailed: Yard 组装失败：{0}
+	Returned: 已将 {0} 个有内容的格子放回主世界 ({1}, {2})，蓝图可再次使用。
+	ReturnOutsideWorld: Yard 当前所在位置超出可放回的世界范围，本次没有搬运。
+	ReturnWaiting: 已吸附到最近的世界格，正在确认位置稳定；放回时会破坏目标区域并掉落物品。
+	ReturnMoved: Yard 的基准格发生移动，本次放回已取消，请稳定后重试。
+	ReturnFailed: Yard 放回失败：{0}
+	FirstCorner: 已选择第一个角 ({0}, {1})。左键选择对角，右键取消。
+	SelectionCancelled: 已取消框选。
+	Assembled: 已移动 {0} 个有内容的格子，尺寸 {1} × {2}，存储坐标 ({3}, {4})，YardId：{5}
+	YardInfo: Yard {0}：存储坐标 ({1}, {2})，尺寸 {3} × {4}
+	Dimensions: 尺寸：{0} × {1} 格；存储坐标：({2}, {3})
+	MissingYard: 当前世界不存在 Yard {0}。
+	Unavailable: Yard 暂不可用，存档数据已保留，请查看日志。
+	RenderOn: 已开启 Yard 渲染。
+	RenderOff: 已关闭 Yard 渲染，可以检查原世界方块是否已清空。
+	YardCount: 当前世界共有 {0} 个 Yard。
+}

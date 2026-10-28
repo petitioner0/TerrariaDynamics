@@ -1,0 +1,5 @@
+displayName = Terraria: Dynamics
+author = Petitioner0
+version = 0.1
+dllReferences = Box2D.NET
+buildIgnore = docs/*, **/*.csproj, **/*.user, obj/*, bin/*
