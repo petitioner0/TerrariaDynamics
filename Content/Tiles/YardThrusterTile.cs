@@ -17,8 +17,8 @@ public sealed class YardThrusterTile : KeybindCircuitTile
     // A full solid tile has unit mass. One thruster can balance ten such tiles.
     public const float Thrust = 10f * PhysicsSystem.Gravity;
 
-    // Frame order is clockwise: up, right, down, left. The half-cell artwork
-    // touches its anchor; the arrow points away from that anchor.
+    // Exhaust frames run clockwise: up, right, down, left. The artwork touches
+    // its anchor; the arrow points outward with the exhaust, opposite to thrust.
     private static int Direction(Tile tile) => tile.TileFrameX / 18 % 4;
 
     public override bool SendsWireSignalOnKeyPress => false;
@@ -72,11 +72,11 @@ public sealed class YardThrusterTile : KeybindCircuitTile
     {
         if (!HasSupport(i, j))
             return;
-        Vector2 normal = Normal(Main.tile[i, j]);
+        Vector2 exhaust = ExhaustDirection(Main.tile[i, j]);
         YardCoordinates coordinates = yard.Coordinates;
-        Vector2 localPoint = coordinates.StorageToLocalPixels(i, j) + new Vector2(8) - normal * 4;
-        yard.ApplyForceAtWorldPosition(coordinates.LocalVectorToWorld(normal) * Thrust,
-            coordinates.LocalToWorld(localPoint));
+        Vector2 localPoint = coordinates.StorageToLocalPixels(i, j) + new Vector2(8) - exhaust * 4;
+        Vector2 force = coordinates.LocalVectorToWorld(-exhaust) * Thrust;
+        yard.ApplyForceAtWorldPosition(force, coordinates.LocalToWorld(localPoint));
     }
 
     public override bool TileFrame(int i, int j, ref bool resetFrame, ref bool noBreak)
@@ -97,8 +97,8 @@ public sealed class YardThrusterTile : KeybindCircuitTile
 
     private static bool HasSupport(int i, int j)
     {
-        Vector2 normal = Normal(Main.tile[i, j]);
-        int x = i - (int)normal.X, y = j - (int)normal.Y;
+        Vector2 exhaust = ExhaustDirection(Main.tile[i, j]);
+        int x = i - (int)exhaust.X, y = j - (int)exhaust.Y;
         if (YardSystem.Instance.TryStorageYard(i, j, out Yard yard)) {
             if (!yard.Bounds.Contains(x, y))
                 return false;
@@ -129,7 +129,7 @@ public sealed class YardThrusterTile : KeybindCircuitTile
     // Hammering must not turn the directional furniture into a slope.
     public override bool Slope(int i, int j) => false;
 
-    private static Vector2 Normal(Tile tile) => Direction(tile) switch {
+    private static Vector2 ExhaustDirection(Tile tile) => Direction(tile) switch {
         1 => Vector2.UnitX,
         2 => Vector2.UnitY,
         3 => -Vector2.UnitX,

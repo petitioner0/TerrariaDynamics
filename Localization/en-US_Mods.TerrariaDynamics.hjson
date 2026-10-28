@@ -18,7 +18,8 @@ Items: {
 			Has no collision in the world or in a Yard
 			Right-click to bind a key in the world or a Yard; bindings follow capture and return
 			Only activates after capturing it and its supporting block into a Yard
-			While deeply bound to that Yard, hold the key to apply continuous thrust in the arrow's direction
+			The arrow shows exhaust direction; thrust is opposite, so mounting underneath pushes upward
+			While deeply bound to that Yard, hold the key to apply continuous thrust
 			Thrust acts at the device, rotates with the Yard, and stops when released
 			Vanilla wire pulses also activate it for one physics update
 			'''

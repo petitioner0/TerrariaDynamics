@@ -16,7 +16,6 @@ using TerrariaDynamics.Common.Lighting;
 using TerrariaDynamics.Common.Networking;
 using TerrariaDynamics.Common.Players;
 using TerrariaDynamics.Common.Storage;
-using TerrariaDynamics.Common.UI;
 using TerrariaDynamics.Common.WorldEditing;
 using TerrariaDynamics.Content.Items;
 
@@ -30,8 +29,6 @@ public sealed partial class YardSystem
     private readonly ulong[] lastInteractions = new ulong[256];
     private Yard clickYard;
     private YardCoordinates clickPose;
-    private bool circuitUiClickHeld;
-    private bool traceCircuitUiClick;
 
     private void LoadInteractions()
     {
@@ -72,7 +69,6 @@ public sealed partial class YardSystem
         physicsRefresh.Clear();
         Array.Clear(lastInteractions);
         clickYard = null;
-        circuitUiClickHeld = traceCircuitUiClick = false;
         interactionYard = null;
         interactionChanges = null;
         receivingTilePacket = false;
@@ -94,22 +90,9 @@ public sealed partial class YardSystem
 
     private void MapTileInteractions(On_Player.orig_LookForTileInteractions orig, Player player)
     {
-        if (Main.netMode != NetmodeID.Server && player.whoAmI == Main.myPlayer) {
-            bool held = Main.mouseRight || player.controlUseTile;
-            traceCircuitUiClick = held && !circuitUiClickHeld;
-            circuitUiClickHeld = held;
-            if (traceCircuitUiClick)
-                CircuitKeybindUISystem.Trace($"Click: mouseWorld={Main.MouseWorld}, playerCenter={player.Center}, "
-                    + $"tileTarget=({Player.tileTargetX},{Player.tileTargetY}), heldItem={player.HeldItem.type}, "
-                    + $"controlUseTile={player.controlUseTile}, releaseUseTile={player.releaseUseTile}, "
-                    + $"render={RenderEnabled}, mouseInterface={player.mouseInterface}, map={Main.mapFullscreen}, "
-                    + $"blockInput={Main.blockInput}, npcHover={Main.HoveringOverAnNPC}, paused={Main.gamePaused}");
-        }
         if (Main.netMode == NetmodeID.Server || Main.gameMenu || player.whoAmI != Main.myPlayer
             || !RenderEnabled || player.mouseInterface || Main.mapFullscreen || Main.blockInput
             || Main.HoveringOverAnNPC || player.HeldItem.ModItem is Blueprint or YardForceTester) {
-            if (traceCircuitUiClick)
-                CircuitKeybindUISystem.Trace("Map skipped: input/UI guard or held Blueprint/YardForceTester; using world interaction.");
             orig(player);
             return;
         }
@@ -125,8 +108,6 @@ public sealed partial class YardSystem
             }
         }
         if (hit == null) {
-            if (traceCircuitUiClick)
-                CircuitKeybindUISystem.Trace($"Hit: no Yard tile under mouse; loadedYards={regions.Values.Count(yard => yard.IsLoaded)}.");
             orig(player);
             return;
         }
@@ -135,25 +116,12 @@ public sealed partial class YardSystem
         bool other = Main.HasInteractibleObjectThatIsNotATile;
         clickYard = hit;
         clickPose = hit.RenderCoordinates;
-        if (traceCircuitUiClick) {
-            Tile tile = Main.tile[target.X, target.Y];
-            YardPlayerView view = new(player, hit, clickPose);
-            TileReachCheckSettings.Simple.GetRanges(player, out int rangeX, out int rangeY);
-            CircuitKeybindUISystem.Trace($"Hit: yard={hit.Id}, storage={target}, local={clickPose.StorageToLocalTile(target)}, "
-                + $"tile={TileLoader.GetTile(tile.TileType)?.FullName ?? tile.TileType.ToString()}, "
-                + $"frame=({tile.TileFrameX},{tile.TileFrameY}), reach={InYardReach(player, hit, target, TileReachCheckSettings.Simple)}, "
-                + $"playerLocal={view.Center}, halfSize={view.HalfSize}, range=({rangeX},{rangeY}), "
-                + $"origin={clickPose.WorldOrigin}, rotation={clickPose.Rotation}, reachTolerancePixels=0.5");
-        }
         try {
             Player.tileTargetX = target.X;
             Player.tileTargetY = target.Y;
             Main.SmartInteractShowingGenuine = false;
             Main.HasInteractibleObjectThatIsNotATile = false;
             orig(player);
-            if (traceCircuitUiClick)
-                CircuitKeybindUISystem.Trace($"Interaction returned: attempted={player.tileInteractAttempted}, "
-                    + $"release={player.releaseUseTile}, happened={player.tileInteractionHappened}");
         }
         finally {
             Player.tileTargetX = x;
@@ -241,9 +209,6 @@ public sealed partial class YardSystem
 
     private void UseYardTile(On_Player.orig_TileInteractionsUse orig, Player player, int x, int y)
     {
-        if (traceCircuitUiClick)
-            CircuitKeybindUISystem.Trace($"UseYardTile: cell=({x},{y}), attempted={player.tileInteractAttempted}, "
-                + $"release={player.releaseUseTile}, actionScope={interactionYard != null}");
         if (interactionYard != null || !TryStorageYard(x, y, out Yard yard)) {
             orig(player, x, y);
             return;

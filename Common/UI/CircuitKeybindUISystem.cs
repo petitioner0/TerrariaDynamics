@@ -20,16 +20,8 @@ public sealed class CircuitKeybindUISystem : ModSystem
     private CircuitKeybindTarget target;
     private GameTime lastUpdate = new();
     private bool suppressKeyboardUntilReleased;
-    private bool loggedDraw;
     public bool IsOpen => userInterface?.CurrentState != null;
     public bool IsListening => IsOpen && state.IsListening;
-
-    internal static void Trace(string message) => ModContent.GetInstance<CircuitKeybindUISystem>().Mod.Logger.Info(
-        $"[CircuitUI tick={Main.GameUpdateCount}] {message}");
-
-    private static string InputState => $"menu={Main.gameMenu}, dead={Main.LocalPlayer.dead}, ghost={Main.LocalPlayer.ghost}, "
-        + $"blockInput={Main.blockInput}, chat={Main.drawingPlayerChat}, sign={Main.editSign}, chest={Main.editChest}, "
-        + $"map={Main.mapFullscreen}, focus={Main.hasFocus}";
 
     public override void Load() => On_PlayerInput.UpdateInput += SuppressBindingInput;
 
@@ -63,49 +55,32 @@ public sealed class CircuitKeybindUISystem : ModSystem
         userInterface = new UserInterface();
         state = new CircuitKeybindUIState();
         state.Activate();
-        Trace("Diagnostics ready; UI state initialized.");
     }
 
     internal bool Open(int i, int j)
     {
-        Trace($"Open requested: cell=({i},{j}), initialized={userInterface != null && state != null}; {InputState}");
         if (Main.gameMenu || Main.LocalPlayer.dead || Main.blockInput || Main.drawingPlayerChat
-            || Main.editSign || Main.editChest || Main.mapFullscreen) {
-            Trace("Open rejected: input/UI guard.");
+            || Main.editSign || Main.editChest || Main.mapFullscreen
+            || !Main.LocalPlayer.IsInTileInteractionRange(i, j, TileReachCheckSettings.Simple)
+            || !YardSystem.Instance.TryCreateCircuitTarget(i, j, out target, allowWorld: true))
             return false;
-        }
-        if (!Main.LocalPlayer.IsInTileInteractionRange(i, j, TileReachCheckSettings.Simple)) {
-            Trace("Open rejected: outside interaction range.");
-            return false;
-        }
-        if (!YardSystem.Instance.TryCreateCircuitTarget(i, j, out target, allowWorld: true)) {
-            Trace("Open rejected: cannot create target (requires a valid circuit tile in the world or a loaded Yard).");
-            return false;
-        }
         state.SetTarget(target);
         userInterface.SetState(state);
-        loggedDraw = false;
-        Trace($"Open succeeded: yard={target.YardId}, cell={target.Cell}, tile={target.TileName}, isOpen={IsOpen}");
         return true;
     }
 
-    public void Close(string reason = "explicit close")
-    {
-        if (IsOpen)
-            Trace($"Close: {reason}; {InputState}");
-        userInterface?.SetState(null);
-    }
+    public void Close() => userInterface?.SetState(null);
 
     public override void OnWorldUnload()
     {
-        Close("world unload");
+        Close();
         suppressKeyboardUntilReleased = false;
     }
 
     public override void Unload()
     {
         On_PlayerInput.UpdateInput -= SuppressBindingInput;
-        Close("mod unload");
+        Close();
         userInterface = null;
         state = null;
     }
@@ -116,22 +91,16 @@ public sealed class CircuitKeybindUISystem : ModSystem
         if (!IsOpen)
             return;
         if (Main.gameMenu || Main.LocalPlayer.dead || Main.LocalPlayer.ghost
-            || Main.drawingPlayerChat || Main.editSign || Main.editChest || Main.mapFullscreen) {
-            Close("input/UI guard during UpdateUI");
-            return;
-        }
-        if (!YardSystem.Instance.TryResolveCircuitTarget(target, out Point storage, out _, out _, allowWorld: true)) {
-            Close("target no longer resolves");
-            return;
-        }
-        if (!Main.LocalPlayer.IsInTileInteractionRange(storage.X, storage.Y, TileReachCheckSettings.Simple)) {
-            Close($"outside interaction range at {storage}, playerCenter={Main.LocalPlayer.Center}");
+            || Main.drawingPlayerChat || Main.editSign || Main.editChest || Main.mapFullscreen
+            || !YardSystem.Instance.TryResolveCircuitTarget(target, out Point storage, out _, out _, allowWorld: true)
+            || !Main.LocalPlayer.IsInTileInteractionRange(storage.X, storage.Y, TileReachCheckSettings.Simple)) {
+            Close();
             return;
         }
         if (!Main.hasFocus)
             state.CancelListening();
         else if (!state.CaptureKeyboard()) {
-            Close("Escape");
+            Close();
             return;
         }
         userInterface.Update(gameTime);
@@ -144,13 +113,8 @@ public sealed class CircuitKeybindUISystem : ModSystem
         int index = layers.FindIndex(layer => layer.Name == "Vanilla: Mouse Text");
         layers.Insert(index < 0 ? layers.Count : index, new LegacyGameInterfaceLayer(
             "TerrariaDynamics: Circuit key binding", () => {
-                if (IsOpen) {
+                if (IsOpen)
                     userInterface.Draw(Main.spriteBatch, lastUpdate);
-                    if (!loggedDraw) {
-                        Trace($"UI drawn: screen={Main.screenWidth}x{Main.screenHeight}, uiScale={Main.UIScale}");
-                        loggedDraw = true;
-                    }
-                }
                 return true;
             }, InterfaceScaleType.UI));
     }
