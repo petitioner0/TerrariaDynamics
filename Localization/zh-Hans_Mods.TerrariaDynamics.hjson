@@ -11,30 +11,11 @@ CircuitKeybinds: {
 
 Items: {
 	YardAnchor: {
-		DisplayName: Yard 固定方块
-		Tooltip:
-			'''
-			实心方块，只有在 Yard 内才会激活
-			右键绑定快捷键；深度绑定到该 Yard 后按住，使整个 Yard 保持静态
-			电线脉冲切换激活状态；所有固定方块均未激活后恢复动态
-			切换静态与动态时清零线速度和角速度
-			'''
+		DisplayName: 空间锚
 	}
 
 	YardThruster: {
-		DisplayName: Yard 推进器
-		Tooltip:
-			'''
-			可贴在实体方块的上下左右四面，支撑被破坏时掉落
-			在主世界和 Yard 中均无碰撞
-			主世界和 Yard 中均可右键配置快捷键，采集和放回时保留绑定
-			只有将它和支撑方块一起采集进 Yard 后才能激活
-			箭头表示喷气方向，推力与箭头相反；装在底部时向上推进
-			深度绑定到该 Yard 后，按住快捷键持续施力
-			力作用于推进器自身位置，方向随 Yard 旋转
-			原版电线脉冲切换持续推力开关，保持到下一次脉冲
-			松开快捷键且电路开关关闭时停止施力
-			'''
+		DisplayName: 推进器
 	}
 
 	YardForceTester: {
