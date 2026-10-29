@@ -16,10 +16,46 @@ internal sealed class WorldTileCollision
     private readonly List<(int X, int Y)> expiredChunks = new();
     private readonly TerrainTileShape[] scanBuffer = new TerrainTileShape[ChunkArea];
     private readonly bool[] merged = new bool[ChunkArea];
+    private B2BodyId boundaryBody;
 
     public int ChunkCount => chunks.Count;
     public int BodyCount { get; private set; }
     public int ShapeCount { get; private set; }
+
+    // Permanent world walls are independent of the streamed terrain chunks.
+    // Bounds use physics units and describe the walls' inward-facing surfaces.
+    public void CreateBoundary(B2WorldId world, B2AABB bounds)
+    {
+        float width = bounds.upperBound.X - bounds.lowerBound.X;
+        float height = bounds.upperBound.Y - bounds.lowerBound.Y;
+        B2BodyDef bodyDef = B2Types.b2DefaultBodyDef();
+        bodyDef.type = B2BodyType.b2_staticBody;
+        bodyDef.position = bounds.lowerBound;
+        B2BodyId replacement = B2Bodies.b2CreateBody(world, bodyDef);
+        try {
+            B2ShapeDef shapeDef = B2Types.b2DefaultShapeDef();
+            shapeDef.density = 0;
+            shapeDef.updateBodyMass = false;
+            shapeDef.invokeContactCreation = true;
+            // One-tile-thick walls meet at the corners without an opening.
+            B2Shapes.b2CreatePolygonShape(replacement, shapeDef,
+                TileCollisionGeometry.Rectangle(0, -1, width, 1));
+            B2Shapes.b2CreatePolygonShape(replacement, shapeDef,
+                TileCollisionGeometry.Rectangle(0, height, width, 1));
+            B2Shapes.b2CreatePolygonShape(replacement, shapeDef,
+                TileCollisionGeometry.Rectangle(-1, -1, 1, height + 2));
+            B2Shapes.b2CreatePolygonShape(replacement, shapeDef,
+                TileCollisionGeometry.Rectangle(width, -1, 1, height + 2));
+        }
+        catch {
+            B2Bodies.b2DestroyBody(replacement);
+            throw;
+        }
+        RemoveBoundary();
+        boundaryBody = replacement;
+        BodyCount++;
+        ShapeCount += 4;
+    }
 
     public void Synchronize(B2WorldId world, int worldWidth, int worldHeight,
         IReadOnlyList<B2Vec2> playerCenters, Func<int, int, TerrainTileShape> readShape,
@@ -84,11 +120,22 @@ internal sealed class WorldTileCollision
 
     public void Clear()
     {
+        RemoveBoundary();
         foreach (CollisionChunk chunk in chunks.Values)
             RemoveBody(chunk);
         chunks.Clear();
         requiredChunks.Clear();
         expiredChunks.Clear();
+    }
+
+    private void RemoveBoundary()
+    {
+        if (boundaryBody.index1 == 0)
+            return;
+        B2Bodies.b2DestroyBody(boundaryBody);
+        boundaryBody = default;
+        BodyCount--;
+        ShapeCount -= 4;
     }
 
     private void RemoveBody(CollisionChunk chunk)

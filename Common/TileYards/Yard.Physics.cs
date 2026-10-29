@@ -63,11 +63,21 @@ public sealed partial class Yard
                 shapes[y * Width + x] = TileCollisionRules.ShapeOf(Main.tile[StorageOrigin.X + x, StorageOrigin.Y + y]);
         // Construct first: a failed replacement leaves the old body intact.
         var replacement = new YardPhysicsBody(world, Width, Height, shapes,
-            WorldPosition, Rotation, LinearVelocity, AngularVelocity);
+            WorldPosition, Rotation, LinearVelocity, AngularVelocity, physicsBody.IsStatic);
         YardPhysicsBody previous = physicsBody;
         LinearVelocity = replacement.PreservePointVelocity(previous, LinearVelocity, AngularVelocity);
         physicsBody = replacement;
         previous.Dispose();
+    }
+
+    internal void SetPhysicsStatic(bool isStatic)
+    {
+        if (Main.netMode == NetmodeID.MultiplayerClient || !IsLoaded || !HasPhysicsBody
+            || physicsBody.IsStatic == isStatic)
+            return;
+        physicsBody.SetStatic(isStatic);
+        LinearVelocity = Vector2.Zero;
+        AngularVelocity = 0;
     }
 
     public void SetTransform(Vector2 worldPosition, float rotation)

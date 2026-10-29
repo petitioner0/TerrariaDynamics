@@ -1,6 +1,6 @@
 // The filename supplies the Mods.TerrariaDynamics prefix.
 CircuitKeybinds: {
-	Title: 电路快捷键
+	Title: 电路快捷键（世界共享）
 	CurrentKey: 当前按键：{0}
 	Unbound: 未绑定
 	Bind: 绑定下一个按键
@@ -10,6 +10,17 @@ CircuitKeybinds: {
 }
 
 Items: {
+	YardAnchor: {
+		DisplayName: Yard 固定方块
+		Tooltip:
+			'''
+			实心方块，只有在 Yard 内才会激活
+			右键绑定快捷键；深度绑定到该 Yard 后按住，使整个 Yard 保持静态
+			电线脉冲切换激活状态；所有固定方块均未激活后恢复动态
+			切换静态与动态时清零线速度和角速度
+			'''
+	}
+
 	YardThruster: {
 		DisplayName: Yard 推进器
 		Tooltip:
@@ -20,8 +31,9 @@ Items: {
 			只有将它和支撑方块一起采集进 Yard 后才能激活
 			箭头表示喷气方向，推力与箭头相反；装在底部时向上推进
 			深度绑定到该 Yard 后，按住快捷键持续施力
-			力作用于推进器自身位置，方向随 Yard 旋转，松开停止施力
-			原版电线脉冲也能激活一次物理更新的推力
+			力作用于推进器自身位置，方向随 Yard 旋转
+			原版电线脉冲切换持续推力开关，保持到下一次脉冲
+			松开快捷键且电路开关关闭时停止施力
 			'''
 	}
 
@@ -48,7 +60,10 @@ Items: {
 	}
 }
 
-Tiles.YardThrusterTile.MapEntry: Yard 推进器
+Tiles: {
+	YardThrusterTile.MapEntry: Yard 推进器
+	YardAnchorTile.MapEntry: Yard 固定方块
+}
 
 Messages: {
 	ServerAuthority: Yard 的世界修改必须由服务器执行。

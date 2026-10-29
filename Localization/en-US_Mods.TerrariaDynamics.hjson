@@ -1,6 +1,6 @@
 // The filename supplies the Mods.TerrariaDynamics prefix.
 CircuitKeybinds: {
-	Title: Circuit key binding
+	Title: Circuit key binding (world shared)
 	CurrentKey: Current key: {0}
 	Unbound: Unbound
 	Bind: Bind next key
@@ -10,6 +10,17 @@ CircuitKeybinds: {
 }
 
 Items: {
+	YardAnchor: {
+		DisplayName: Yard Anchor Block
+		Tooltip:
+			'''
+			A solid block; only activates inside a Yard
+			Right-click to bind a key; hold it while deeply bound to that Yard to keep the Yard static
+			Wire pulses toggle activation; releases when all anchor blocks are inactive
+			Clears linear and angular velocity when switching between static and dynamic
+			'''
+	}
+
 	YardThruster: {
 		DisplayName: Yard Thruster
 		Tooltip:
@@ -20,8 +31,9 @@ Items: {
 			Only activates after capturing it and its supporting block into a Yard
 			The arrow shows exhaust direction; thrust is opposite, so mounting underneath pushes upward
 			While deeply bound to that Yard, hold the key to apply continuous thrust
-			Thrust acts at the device, rotates with the Yard, and stops when released
-			Vanilla wire pulses also activate it for one physics update
+			Thrust acts at the device and rotates with the Yard
+			Vanilla wire pulses toggle continuous thrust until the next pulse
+			Thrust stops when the key is released and the wire toggle is off
 			'''
 	}
 
@@ -48,7 +60,10 @@ Items: {
 	}
 }
 
-Tiles.YardThrusterTile.MapEntry: Yard Thruster
+Tiles: {
+	YardThrusterTile.MapEntry: Yard Thruster
+	YardAnchorTile.MapEntry: Yard Anchor Block
+}
 
 Messages: {
 	ServerAuthority: Yard world changes must be performed by the server.

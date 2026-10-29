@@ -18,7 +18,9 @@ internal enum YardPacketKind : byte
     RequestTileInteraction,
     PlayerRest,
     RequestStopRest,
-    CircuitKeyInput
+    CircuitKeyInput,
+    CircuitActivation,
+    RequestCircuitBinding
 }
 
 internal enum YardEventKind : byte
@@ -26,14 +28,15 @@ internal enum YardEventKind : byte
     Snapshot,
     Created,
     Returned,
-    ReturnState
+    ReturnState,
+    CircuitBinding
 }
 
 // ModPacket has a UInt16 length. A maximum-size Yard snapshot alone exceeds it,
 // so persistent V2 data travels compressed in ordered, bounded chunks.
 internal static class YardPacketCodec
 {
-    public const byte ProtocolVersion = 6;
+    public const byte ProtocolVersion = 8;
     public const int ChunkSize = 48 * 1024;
     public const int MaxPayloadSize = 128 * 1024 * 1024;
 

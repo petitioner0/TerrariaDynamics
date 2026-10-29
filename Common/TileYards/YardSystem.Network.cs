@@ -170,6 +170,8 @@ public sealed partial class YardSystem
                     ReceiveStopRest(reader, sender);
                 else if (kind == YardPacketKind.CircuitKeyInput)
                     ReceiveCircuitKeyInput(reader, sender);
+                else if (kind == YardPacketKind.RequestCircuitBinding)
+                    ReceiveCircuitBindingRequest(reader, sender);
                 // Clients cannot submit event chunks or operation results.
             }
             else if (Main.netMode == NetmodeID.MultiplayerClient) {
@@ -187,6 +189,8 @@ public sealed partial class YardSystem
                     ReceivePlayerAttachment(reader, sender);
                 else if (kind == YardPacketKind.PlayerRest)
                     ReceivePlayerRest(reader);
+                else if (kind == YardPacketKind.CircuitActivation)
+                    ReceiveCircuitActivation(reader);
             }
         }
         catch (Exception error) {
@@ -319,8 +323,12 @@ public sealed partial class YardSystem
     private void SendSnapshot(int client)
     {
         TagCompound tag = Snapshot(regions.Values);
+        SaveCircuitBindings(tag);
         YardNetworkObjects.Save(tag, regions.Values);
         SendEvent(YardEventKind.Snapshot, tag, client);
+        foreach (var entry in circuitActivations)
+            if (entry.Value.Active && TryResolveCircuitTarget(entry.Key, out _, out _, out _))
+                SendCircuitActivation(entry.Key, true, client);
         foreach (Player player in Main.player)
             if (player != null && player.active)
                 SendPlayerRest(player.GetModPlayer<YardRestingPlayer>().State, client);
@@ -464,6 +472,12 @@ public sealed partial class YardSystem
         }
         else if (revision < networkRevision) return;
 
+        if (kind == YardEventKind.CircuitBinding) {
+            ReceiveCircuitBinding(tag);
+            networkRevision = revision;
+            return;
+        }
+
         List<Yard> loaded = kind is YardEventKind.Snapshot or YardEventKind.Created
             ? YardWorldData.Load(tag, Main.maxTilesX, Main.maxTilesY, Main.tile.Height) : null;
         if (kind == YardEventKind.Created && (loaded.Count != 1 || regions.ContainsKey(loaded[0].Id)
@@ -486,6 +500,8 @@ public sealed partial class YardSystem
         YardNetworkObjects objects = YardNetworkObjects.Load(tag, width, Main.tile.Height);
         if (kind == YardEventKind.Snapshot) {
             physicsPoseSequences.Clear();
+            circuitActivations.Clear();
+            LoadCircuitBindings(tag);
             HashSet<Guid> ids = loaded.Select(yard => yard.Id).ToHashSet();
             foreach (Yard old in regions.Values) {
                 ClearStorage(old);
@@ -511,12 +527,12 @@ public sealed partial class YardSystem
                     yard.MarkLoaded(count);
                     TagCompound saved = tag.GetList<TagCompound>("yards").First(entry => entry.GetString("id") == yard.Id.ToString("D"));
                     yard.ApplyRemoteState(yard.WorldPosition, yard.Rotation, saved.GetBool("returning"));
-                    if (kind == YardEventKind.Created)
-                        MoveLocalCircuitBindings(Guid.Empty, yard.Source, yard.Id, Point.Zero);
                 }
                 catch (Exception error) {
                     Mod.Logger.Error($"Network Yard {yard.Id} could not be loaded. Payload preserved.", error);
                 }
+                if (kind == YardEventKind.Created)
+                    MoveCircuitBindings(Guid.Empty, yard.Source, yard.Id, Point.Zero);
             }
             WorldRevision++;
         }
@@ -528,7 +544,7 @@ public sealed partial class YardSystem
                 if (!tag.ContainsKey("tileX") || !tag.ContainsKey("tileY")
                     || !PlayableBounds.Contains(new Rectangle(origin.X, origin.Y, yard.Width, yard.Height)))
                     throw new InvalidDataException("Invalid Yard return position.");
-                MoveLocalCircuitBindings(yard.Id, new Rectangle(0, 0, yard.Width, yard.Height), Guid.Empty, origin);
+                MoveCircuitBindings(yard.Id, new Rectangle(0, 0, yard.Width, yard.Height), Guid.Empty, origin);
                 physicsPoseSequences.Remove(id);
                 ClearStorage(yard);
                 regions.Remove(id);

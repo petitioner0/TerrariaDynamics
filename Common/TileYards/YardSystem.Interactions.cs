@@ -215,8 +215,8 @@ public sealed partial class YardSystem
         }
         ushort type = Main.tile[x, y].TileType;
         if (TileLoader.GetTile(type) is KeybindCircuitTile circuit) {
-            // Binding UI is local to the player, including on multiplayer Yard
-            // tiles. Only later keyboard activations are sent to the server.
+            // Open the UI locally; shared binding changes and keyboard inputs
+            // are submitted separately to the server.
             if (player.tileInteractAttempted && player.releaseUseTile
                 && InYardReach(player, yard, new Point(x, y), TileReachCheckSettings.Simple)
                 && circuit.RightClick(x, y)) {

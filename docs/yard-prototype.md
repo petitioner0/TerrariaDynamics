@@ -597,6 +597,10 @@ dotnet build TerrariaDynamics.csproj '-p:BuildMod=false' '-p:TargetFramework=net
 `PhysicsSystem.Instance.TerrainChunkCount/TerrainBodyCount/TerrainShapeCount` 随附近地形更新。
 挖掘、放置、敲击斜坡/半砖和致动时，检查 Box2D 射线或后续动态物体使用的是最新形状；
 平台、绳子、纯液体和纯墙区域没有地形碰撞。两名玩家相近时不重复创建地形，离开玩家和 Yard 范围后释放旧块。
+世界四边另有一个常驻静态刚体、四个墙面形状，计入 `TerrainBodyCount/TerrainShapeCount`，不计入地形块数。
+墙面采用普通玩家活动边界：左/上距世界边缘 656 像素，右/下距世界边缘 672 像素；只在单机或服务器创建。
+边界验收：驾驶带实体碰撞的 Yard 持续向上、向下和左右推进，确认撞墙后停止越界，斜撞与旋转由物理接触处理；
+分别站立、坐下及睡觉随 Yard 顶住上边界，确认不出现数组越界；联机观察客户端与服务器位置一致。
 暂停后模拟不推进；退出并进入另一世界时，旧 `WorldId` 失效且没有旧地形残留。
 重力验收：Yard 从静止开始自由下落时，每游戏更新增加约 `1.5 Tile/s` 的向下速度，
 没有额外的最大下落速度截断。
@@ -632,10 +636,11 @@ B 中途加入时已有乘客状态正确，断流后的相对移动预测不超
 这些原版入口、UI 和联机操作仍需人工游戏内验收。
 
 可绑定按键的电路设备现有可复用的 `KeybindCircuitItem<TTile>` / `KeybindCircuitTile` 基类，
-快捷键和电路输入统一检测激活状态，仅在未激活变为激活时执行 `OnCircuitTriggered`。
+快捷键按住状态与电线脉冲切换的开关状态取“或”，电路开关保持到下一次脉冲；
+统一检测激活状态，仅在未激活变为激活时执行 `OnCircuitTriggered`。
 需要持续效果的设备可通过 `OnCircuitActive` 在激活期间每次物理更新执行一次。
 设备仅在 Yard 内生效，快捷键只接受深度绑定到该设备所属 Yard 的玩家输入。
-继承方式、状态查询、角色绑定存储及人工验收见 [circuit-keybinds.md](circuit-keybinds.md)。
+继承方式、状态查询、世界共享绑定存储及人工验收见 [circuit-keybinds.md](circuit-keybinds.md)。
 
 具体设备 `YardThrusterTile` 提供四向推进器：箭头沿贴附面的外法向表示喷气方向，以自身位置沿反方向施加持续推力，
 方向随 Yard 旋转，偏心安装产生转矩。支撑破坏后掉落，推进器在主世界和 Yard 中均无碰撞。

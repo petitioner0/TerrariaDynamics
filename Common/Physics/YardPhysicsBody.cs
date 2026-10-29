@@ -13,10 +13,11 @@ internal sealed class YardPhysicsBody : IDisposable
     public B2BodyId BodyId { get; private set; }
     public int ShapeCount { get; }
     public float Mass => B2Bodies.b2Body_GetMass(BodyId);
+    public bool IsStatic => B2Bodies.b2Body_GetType(BodyId) == B2BodyType.b2_staticBody;
     public bool IsValid => B2Worlds.b2World_IsValid(world) && B2Worlds.b2Body_IsValid(BodyId);
 
     public YardPhysicsBody(B2WorldId world, int width, int height, ReadOnlySpan<TerrainTileShape> shapes,
-        Vector2 position, float rotation, Vector2 linearVelocity, float angularVelocity)
+        Vector2 position, float rotation, Vector2 linearVelocity, float angularVelocity, bool isStatic = false)
     {
         this.world = world;
         radius = MathF.Sqrt((float)width * width + (float)height * height);
@@ -40,6 +41,8 @@ internal sealed class YardPhysicsBody : IDisposable
             // Apply saved velocities after mass computation, which can shift COM.
             B2Bodies.b2Body_SetLinearVelocity(BodyId, PhysicsSystem.PixelsToPhysics(linearVelocity));
             B2Bodies.b2Body_SetAngularVelocity(BodyId, angularVelocity);
+            if (isStatic)
+                SetStatic(true);
         }
         catch {
             Dispose();
@@ -51,6 +54,18 @@ internal sealed class YardPhysicsBody : IDisposable
     {
         B2Bodies.b2Body_SetTransform(BodyId, PhysicsSystem.PixelsToPhysics(position), Rotation(rotation));
         B2Bodies.b2Body_SetAwake(BodyId, true);
+    }
+
+    public void SetStatic(bool isStatic)
+    {
+        if (IsStatic == isStatic)
+            return;
+        B2Bodies.b2Body_SetType(BodyId, isStatic ? B2BodyType.b2_staticBody : B2BodyType.b2_dynamicBody);
+        if (!isStatic && ShapeCount == 0)
+            B2Bodies.b2Body_SetMassData(BodyId, new B2MassData { mass = 1 });
+        // Neither transition retains momentum, including angular velocity.
+        B2Bodies.b2Body_SetLinearVelocity(BodyId, new B2Vec2(0, 0));
+        B2Bodies.b2Body_SetAngularVelocity(BodyId, 0);
     }
 
     public Vector2 PreservePointVelocity(YardPhysicsBody previous, Vector2 velocity, float angularVelocity)

@@ -10,7 +10,7 @@ using TerrariaDynamics.Common.UI;
 namespace TerrariaDynamics.Common.Circuitry;
 
 /// <summary>
-/// Yard-only wire receiver with a per-player keyboard binding. Shortcuts require
+/// Yard-only wire receiver with a world-shared keyboard binding. Shortcuts require
 /// deep binding to the owning Yard. Concrete tiles configure placement and
 /// artwork, and implement OnCircuitTriggered.
 /// </summary>
@@ -18,6 +18,12 @@ public abstract class KeybindCircuitTile : ModTile
 {
     /// <summary>Whether a keyboard activation also pulses connected vanilla wires.</summary>
     public virtual bool SendsWireSignalOnKeyPress => true;
+
+    /// <summary>
+    /// Keeps the owning Yard static while this device is active and not actuated.
+    /// Requests from all devices are combined before continuous forces run.
+    /// </summary>
+    public virtual bool KeepsYardStaticWhileActive => false;
 
     /// <summary>
     /// Additional keyboard eligibility after deep binding to the owning Yard has
@@ -62,7 +68,8 @@ public abstract class KeybindCircuitTile : ModTile
 
     /// <summary>
     /// The last evaluated activation state of this placed object. State is
-    /// authoritative in single player and on the server, and is not persisted.
+    /// authoritative in single player and on the server, replicated to clients
+    /// for rendering, and is not persisted.
     /// </summary>
     public bool IsActive(int i, int j) =>
         YardSystem.Instance.TryCreateCircuitTarget(i, j, out CircuitKeybindTarget target)
@@ -111,6 +118,6 @@ public abstract class KeybindCircuitTile : ModTile
         // Emit only for the activation edge driven by a keyboard input, never
         // once per held tick or in response to an incoming wire pulse.
         if (keyboardActive && SendsWireSignalOnKeyPress)
-            Wiring.TripWire(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+            YardSystem.Instance.SendCircuitWireSignal(bounds);
     }
 }

@@ -7,6 +7,7 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using TerrariaDynamics.Common.Circuitry;
 using TerrariaDynamics.Common.Players;
+using TerrariaDynamics.Common.TileYards;
 
 namespace TerrariaDynamics.Common.UI;
 
@@ -18,7 +19,6 @@ internal sealed class CircuitKeybindUIState : UIState
     private KeyboardState previousKeys;
     private CircuitKeybindTarget target;
     public bool IsListening { get; private set; }
-    private CircuitKeybindPlayer Bindings => Main.LocalPlayer.GetModPlayer<CircuitKeybindPlayer>();
 
     internal static string Text(string key, params object[] args) =>
         Language.GetTextValue("Mods.TerrariaDynamics.CircuitKeybinds." + key, args);
@@ -47,7 +47,7 @@ internal sealed class CircuitKeybindUIState : UIState
             Refresh();
         };
         Button("Clear", 132).OnLeftClick += (_, _) => {
-            Bindings.SetBinding(target, Keys.None);
+            YardSystem.Instance.RequestCircuitBinding(target, Keys.None);
             CancelListening();
         };
         Button("Close", 181).OnLeftClick += (_, _) =>
@@ -79,7 +79,7 @@ internal sealed class CircuitKeybindUIState : UIState
 
     private void Refresh()
     {
-        Keys key = Bindings.GetBinding(target);
+        Keys key = YardSystem.Instance.GetCircuitBinding(target);
         bindingLabel.SetText(Text("CurrentKey", key == Keys.None ? Text("Unbound") : key.ToString()));
         bindButton.SetText(Text(IsListening ? "Listening" : "Bind"));
     }
@@ -96,7 +96,7 @@ internal sealed class CircuitKeybindUIState : UIState
             else {
                 foreach (Keys key in current.GetPressedKeys()) {
                     if (previousKeys.IsKeyUp(key) && CircuitKeybindPlayer.IsBindableKey(key)) {
-                        Bindings.SetBinding(target, key);
+                        YardSystem.Instance.RequestCircuitBinding(target, key);
                         CancelListening();
                         break;
                     }
@@ -111,6 +111,7 @@ internal sealed class CircuitKeybindUIState : UIState
 
     public override void Update(GameTime gameTime)
     {
+        Refresh();
         if (IsListening || panel.ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;
         base.Update(gameTime);

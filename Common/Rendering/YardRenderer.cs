@@ -6,8 +6,10 @@ using Terraria.GameContent;
 using Terraria.GameContent.Drawing;
 using Terraria.GameContent.UI;
 using Terraria.ID;
+using Terraria.ModLoader;
 using TerrariaDynamics.Common.Players;
 using TerrariaDynamics.Common.TileYards;
+using TerrariaDynamics.Content.Tiles;
 
 namespace TerrariaDynamics.Common.Rendering;
 
@@ -175,6 +177,14 @@ internal static class YardRenderer
         Texture2D painted = Main.instance.TilePaintSystem.TryGetTileAndRequestIfNotReady(tile.TileType, 0, tile.TileColor);
         if (painted != null)
             texture = painted;
+        // Circuit state is replicated separately from stored tile frames, so
+        // switching artwork never changes placement direction or saved tiles.
+        if (TileLoader.GetTile(tile.TileType) is YardThrusterTile thruster
+            && thruster.ActiveTexture(yardX, yardY) is Texture2D activeTexture)
+            texture = activeTexture;
+        else if (TileLoader.GetTile(tile.TileType) is YardAnchorTile anchor
+            && anchor.ActiveTexture(yardX, yardY) is Texture2D anchorTexture)
+            texture = anchorTexture;
 
         short frameX = tile.TileFrameX;
         short frameY = tile.TileFrameY;

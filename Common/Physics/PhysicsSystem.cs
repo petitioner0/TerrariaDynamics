@@ -45,7 +45,18 @@ public sealed class PhysicsSystem : ModSystem
 
     public override void OnWorldUnload() => ResetWorld();
 
-    public override void PostWorldLoad() => worldLoaded = true;
+    public override void PostWorldLoad()
+    {
+        if (Main.netMode != NetmodeID.MultiplayerClient) {
+            // Match the ordinary player's BordersMovement limits. These are
+            // world pixels, not backing-store dimensions or Yard coordinates.
+            terrain.CreateBoundary(WorldId, new B2AABB {
+                lowerBound = PixelsToPhysics(new Vector2(Main.leftWorld + 656, Main.topWorld + 656)),
+                upperBound = PixelsToPhysics(new Vector2(Main.rightWorld - 672, Main.bottomWorld - 672))
+            });
+        }
+        worldLoaded = true;
+    }
 
     public override void Unload() => DestroyWorld();
 

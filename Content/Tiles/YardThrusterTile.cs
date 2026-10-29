@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
@@ -14,6 +16,20 @@ namespace TerrariaDynamics.Content.Tiles;
 
 public sealed class YardThrusterTile : KeybindCircuitTile
 {
+    private Asset<Texture2D> activeTexture;
+
+    public override void Load()
+    {
+        if (!Main.dedServ)
+            activeTexture = ModContent.Request<Texture2D>(Texture + "_Active");
+    }
+
+    public override void Unload() => activeTexture = null;
+
+    internal Texture2D ActiveTexture(int i, int j) =>
+        IsActive(i, j) && !Main.tile[i, j].IsActuated && HasSupport(i, j)
+            ? activeTexture.Value : null;
+
     // A full solid tile has unit mass. One thruster can balance ten such tiles.
     public const float Thrust = 10f * PhysicsSystem.Gravity;
 

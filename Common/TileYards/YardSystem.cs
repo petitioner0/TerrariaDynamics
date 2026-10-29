@@ -61,6 +61,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
 
     private void ClearInstances()
     {
+        circuitBindings.Clear();
         WorldRevision++;
         YardLighting.Clear();
         Yard[] previous = regions.Values.ToArray();
@@ -135,6 +136,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
                 if (yard.IsLoaded)
                     yard.RefreshPhysics(physics.WorldId);
             physicsRefresh.Clear();
+            UpdateCircuitBodyTypes();
             UpdateActiveCircuits();
             ApplyTestForces();
             physics.Step(regions.Values);
@@ -181,7 +183,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
             }
             // Ownership changes only after the transfer commits. Cosmetic updates
             // must never leave a filled blueprint pointing at an already emptied Yard.
-            MoveLocalCircuitBindings(region.Id, new Rectangle(0, 0, region.Width, region.Height),
+            MoveCircuitBindings(region.Id, new Rectangle(0, 0, region.Width, region.Height),
                 Guid.Empty, placedBounds.Location);
             regions.Remove(region.Id);
             YardLighting.Remove(region.Id);
@@ -300,7 +302,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
                 region.Invalidate(removed: true);
                 throw;
             }
-            MoveLocalCircuitBindings(Guid.Empty, source, region.Id, Point.Zero);
+            MoveCircuitBindings(Guid.Empty, source, region.Id, Point.Zero);
             WorldRevision++;
             RefreshYardFrames(region);
             RefreshSourceBorder(source);
@@ -437,6 +439,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
     {
         YardWorldData.Save(tag, regions.Values, region => region.IsLoaded
             ? YardTileCodec.Save(Main.tile, region) : region.PendingTiles);
+        SaveCircuitBindings(tag);
     }
 
     public override void LoadWorldData(TagCompound tag)
@@ -446,6 +449,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
             region.Attach(this);
             regions.Add(region.Id, region);
         }
+        LoadCircuitBindings(tag);
     }
 
     public override void PostWorldLoad()
