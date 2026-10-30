@@ -12,10 +12,12 @@ CircuitKeybinds: {
 Items: {
 	YardAnchor: {
 		DisplayName: Space Anchor
+		Tooltip: ""
 	}
 
 	YardThruster: {
 		DisplayName: Thruster
+		Tooltip: ""
 	}
 
 	YardForceTester: {

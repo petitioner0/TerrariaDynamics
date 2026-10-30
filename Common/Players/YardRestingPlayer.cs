@@ -206,6 +206,11 @@ public sealed class YardRestingPlayer : ModPlayer
         // following. Keep the native player hitbox and damage handling intact.
         movementPose = pose;
         Player.Bottom = bottom;
+        // Step/slope collision can move the player and leave a compensating
+        // draw offset. Repinning discards that movement, so discard its offset
+        // too, both on entry and before/after vanilla movement each update.
+        // Furniture and shared-seat offsets live in the native rest helpers.
+        Player.gfxOffY = 0;
         Player.velocity = Vector2.Zero;
         Player.fallStart = Player.fallStart2 = (int)(Player.position.Y / 16);
     }
