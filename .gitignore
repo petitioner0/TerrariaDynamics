@@ -7,3 +7,5 @@ lib/Box2D.NET.dll
 
 AGENTS.md
 /docs
+
+/.nuget
