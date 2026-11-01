@@ -12,31 +12,22 @@ CircuitKeybinds: {
 Items: {
 	YardStabilizer: {
 		DisplayName: 不倒翁
-		Tooltip:
-			'''
-			让yard回正到自己的朝向
-			'''
+		Tooltip: 让yard回正到自己的朝向
 	}
 
 	YardAnchor: {
 		DisplayName: 空间锚
-		Tooltip: "让yard静止无法移动"
+		Tooltip: 让yard静止无法移动
 	}
 
 	YardThruster: {
 		DisplayName: 推进器
-		Tooltip:
-			'''
-			以自己的箭头朝向推进yard
-			'''
+		Tooltip: 以自己的箭头朝向推进yard
 	}
 
 	YardForceTester: {
 		DisplayName: Yard 施力测试器
-		Tooltip:
-			'''
-			推动所有yard，用于测试
-			'''
+		Tooltip: 推动所有yard，用于测试
 	}
 
 	Blueprint: {

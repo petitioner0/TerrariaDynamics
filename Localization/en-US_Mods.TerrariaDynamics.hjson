@@ -12,10 +12,7 @@ CircuitKeybinds: {
 Items: {
 	YardStabilizer: {
 		DisplayName: Yard Stabilizer
-		Tooltip:
-			'''
-			make yard turn to its direction
-			'''
+		Tooltip: make yard turn to its direction
 	}
 
 	YardAnchor: {
@@ -25,18 +22,12 @@ Items: {
 
 	YardThruster: {
 		DisplayName: Thruster
-		Tooltip:
-			'''
-			push yard base on the direction
-			'''
+		Tooltip: push yard base on the direction
 	}
 
 	YardForceTester: {
 		DisplayName: Yard Force Tester
-		Tooltip:
-			'''
-			give all yard a force
-			'''
+		Tooltip: give all yard a force
 	}
 
 	Blueprint: {
