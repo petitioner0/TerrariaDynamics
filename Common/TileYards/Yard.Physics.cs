@@ -19,6 +19,7 @@ public sealed partial class Yard
     public float AngularVelocity { get; private set; }
     public bool HasPhysicsBody => physicsBody != null && physicsBody.IsValid;
     internal float PhysicsMass => HasPhysicsBody ? physicsBody.Mass : 0;
+    internal float PhysicsRotationalInertia => HasPhysicsBody ? physicsBody.RotationalInertia : 0;
 
     public bool TryGetPhysicsBody(out B2BodyId body)
     {
@@ -133,6 +134,16 @@ public sealed partial class Yard
             throw new ArgumentOutOfRangeException(nameof(force));
         if (Main.netMode != NetmodeID.MultiplayerClient && IsLoaded && HasPhysicsBody)
             physicsBody.ApplyForceAtWorldPosition(force, worldPosition);
+    }
+
+    // Torque is in Box2D mass * tiles²/s² and changes rotation about the COM.
+    internal void ApplyTorque(float torque)
+    {
+        ThrowIfInvalid();
+        if (!float.IsFinite(torque))
+            throw new ArgumentOutOfRangeException(nameof(torque));
+        if (Main.netMode != NetmodeID.MultiplayerClient && IsLoaded && HasPhysicsBody && torque != 0)
+            physicsBody.ApplyTorque(torque);
     }
 
     internal bool TryGetPhysicsTerrainBounds(float timeStep, float gravity, out B2AABB bounds)

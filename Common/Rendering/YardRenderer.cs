@@ -185,6 +185,9 @@ internal static class YardRenderer
         else if (TileLoader.GetTile(tile.TileType) is YardAnchorTile anchor
             && anchor.ActiveTexture(yardX, yardY) is Texture2D anchorTexture)
             texture = anchorTexture;
+        else if (TileLoader.GetTile(tile.TileType) is YardStabilizerTile stabilizer
+            && stabilizer.ActiveTexture(yardX, yardY) is Texture2D stabilizerTexture)
+            texture = stabilizerTexture;
 
         short frameX = tile.TileFrameX;
         short frameY = tile.TileFrameY;

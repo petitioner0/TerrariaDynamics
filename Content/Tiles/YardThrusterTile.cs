@@ -50,6 +50,8 @@ public sealed class YardThrusterTile : KeybindCircuitTile
         // Non-solid furniture in both the main world and Yard physics.
         Main.tileSolid[Type] = false;
         Main.tileSolidTop[Type] = false;
+        // Non-solid furniture needs this opt-in to receive normal hammer hits.
+        TileID.Sets.CanBeSloped[Type] = true;
         DustType = DustID.Iron;
         HitSound = SoundID.Dig;
 
@@ -111,9 +113,11 @@ public sealed class YardThrusterTile : KeybindCircuitTile
             NetMessage.SendTileSquare(-1, i, j, 1);
     }
 
-    private static bool HasSupport(int i, int j)
+    private static bool HasSupport(int i, int j) => HasSupport(i, j, Direction(Main.tile[i, j]));
+
+    private static bool HasSupport(int i, int j, int direction)
     {
-        Vector2 exhaust = ExhaustDirection(Main.tile[i, j]);
+        Vector2 exhaust = ExhaustDirection(direction);
         int x = i - (int)exhaust.X, y = j - (int)exhaust.Y;
         if (YardSystem.Instance.TryStorageYard(i, j, out Yard yard)) {
             if (!yard.Bounds.Contains(x, y))
@@ -142,10 +146,31 @@ public sealed class YardThrusterTile : KeybindCircuitTile
         return false;
     }
 
-    // Hammering must not turn the directional furniture into a slope.
-    public override bool Slope(int i, int j) => false;
+    public override bool Slope(int i, int j)
+    {
+        if (YardSystem.Instance.TryStorageYard(i, j, out _))
+            return false;
 
-    private static Vector2 ExhaustDirection(Tile tile) => Direction(tile) switch {
+        Tile tile = Main.tile[i, j];
+        int direction = Direction(tile);
+        // Search clockwise without changing frames until a valid anchor is found.
+        // If only the current face is supported, keep the existing direction.
+        for (int offset = 1; offset < 4; offset++) {
+            int nextDirection = (direction + offset) % 4;
+            if (!HasSupport(i, j, nextDirection))
+                continue;
+            tile.TileFrameX = (short)(nextDirection * 18);
+            if (Main.netMode != NetmodeID.SinglePlayer)
+                NetMessage.SendTileSquare(-1, i, j, 1);
+            break;
+        }
+        // Rotation replaces the normal slope/half-block action.
+        return false;
+    }
+
+    private static Vector2 ExhaustDirection(Tile tile) => ExhaustDirection(Direction(tile));
+
+    private static Vector2 ExhaustDirection(int direction) => direction switch {
         1 => Vector2.UnitX,
         2 => Vector2.UnitY,
         3 => -Vector2.UnitX,

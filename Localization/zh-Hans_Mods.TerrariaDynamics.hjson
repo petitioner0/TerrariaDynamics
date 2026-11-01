@@ -10,24 +10,32 @@ CircuitKeybinds: {
 }
 
 Items: {
+	YardStabilizer: {
+		DisplayName: 不倒翁
+		Tooltip:
+			'''
+			让yard回正到自己的朝向
+			'''
+	}
+
 	YardAnchor: {
 		DisplayName: 空间锚
-		// Tooltip: ""
+		Tooltip: "让yard静止无法移动"
 	}
 
 	YardThruster: {
 		DisplayName: 推进器
-		// Tooltip: ""
+		Tooltip:
+			'''
+			以自己的箭头朝向推进yard
+			'''
 	}
 
 	YardForceTester: {
 		DisplayName: Yard 施力测试器
 		Tooltip:
 			'''
-			按住右键，再按方向键或移动键，推动当前所有已加载的 Yard
-			按住方向持续施力；松开右键或切换物品停止施力
-			力作用于各 Yard 的质心，按质量缩放以获得一致的加速度
-			方向以世界坐标为准；按住右键期间，移动键用于控制 Yard
+			推动所有yard，用于测试
 			'''
 	}
 
@@ -37,13 +45,13 @@ Items: {
 			'''
 			左键依次选取两个对角，将方块、背景墙、电线及附加数据搬入 Yard
 			空蓝图右键取消框选；已绑定的蓝图左键查看信息，右键按当前所在位置放回主世界
-			放回时吸附到最近格子并恢复初始朝向；稳定后强制替换整个选区，原有方块正常掉落
-			支持单人与多人联机，Yard 的实体方块会运动，并与地形及其他 Yard 碰撞
+			放回时吸附到最近格子并恢复初始朝向
 			'''
 	}
 }
 
 Tiles: {
+	YardStabilizerTile.MapEntry: Yard 回正器
 	YardThrusterTile.MapEntry: Yard 推进器
 	YardAnchorTile.MapEntry: Yard 固定方块
 }

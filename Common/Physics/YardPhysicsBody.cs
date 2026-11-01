@@ -13,6 +13,7 @@ internal sealed class YardPhysicsBody : IDisposable
     public B2BodyId BodyId { get; private set; }
     public int ShapeCount { get; }
     public float Mass => B2Bodies.b2Body_GetMass(BodyId);
+    public float RotationalInertia => B2Bodies.b2Body_GetRotationalInertia(BodyId);
     public bool IsStatic => B2Bodies.b2Body_GetType(BodyId) == B2BodyType.b2_staticBody;
     public bool IsValid => B2Worlds.b2World_IsValid(world) && B2Worlds.b2Body_IsValid(BodyId);
 
@@ -93,6 +94,8 @@ internal sealed class YardPhysicsBody : IDisposable
     public void ApplyForceAtWorldPosition(Vector2 force, Vector2 worldPosition) =>
         B2Bodies.b2Body_ApplyForce(BodyId, new B2Vec2(force.X, force.Y),
             PhysicsSystem.PixelsToPhysics(worldPosition), true);
+
+    public void ApplyTorque(float torque) => B2Bodies.b2Body_ApplyTorque(BodyId, torque, true);
 
     public B2AABB TerrainBounds(float timeStep, float gravity)
     {

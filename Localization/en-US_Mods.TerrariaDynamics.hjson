@@ -10,40 +10,47 @@ CircuitKeybinds: {
 }
 
 Items: {
+	YardStabilizer: {
+		DisplayName: Yard Stabilizer
+		Tooltip:
+			'''
+			make yard turn to its direction
+			'''
+	}
+
 	YardAnchor: {
 		DisplayName: Space Anchor
-		Tooltip: ""
+		Tooltip: " make yard cannot move"
 	}
 
 	YardThruster: {
 		DisplayName: Thruster
-		Tooltip: ""
+		Tooltip:
+			'''
+			push yard base on the direction
+			'''
 	}
 
 	YardForceTester: {
 		DisplayName: Yard Force Tester
 		Tooltip:
 			'''
-			Hold right-click, then press arrow keys or movement keys to push every loaded yard
-			Hold a direction for continuous force; release right-click or change items to stop
-			Applies force at each yard's center of mass, scaled by mass for consistent acceleration
-			Forces use world directions; movement keys control yards while right-click is held
+			give all yard a force
 			'''
 	}
 
 	Blueprint: {
 		DisplayName: Yard Blueprint
-		Tooltip:
 			'''
 			Left-click two corners to move blocks, walls, wires and attachments into a yard
 			Right-click an empty blueprint to cancel; left-click a filled blueprint for info, right-click to return its yard at its current position
-			Return snaps to the nearest tile upright; once stable, replaces the whole region and drops existing blocks
-			Supports single-player and multiplayer; solid yard tiles move and collide with terrain and other yards
+			Return snaps to the nearest tile upright
 			'''
 	}
 }
 
 Tiles: {
+	YardStabilizerTile.MapEntry: Yard Stabilizer
 	YardThrusterTile.MapEntry: Yard Thruster
 	YardAnchorTile.MapEntry: Yard Anchor Block
 }
