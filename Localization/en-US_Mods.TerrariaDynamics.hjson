@@ -41,6 +41,7 @@ Items: {
 
 	Blueprint: {
 		DisplayName: Yard Blueprint
+		Tooltip:
 			'''
 			Left-click two corners to move blocks, walls, wires and attachments into a yard
 			Right-click an empty blueprint to cancel; left-click a filled blueprint for info, right-click to return its yard at its current position
