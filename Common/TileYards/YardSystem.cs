@@ -45,7 +45,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
         On_Player.PlayerFrame += FrameYardPlayer;
         if (!Main.dedServ) {
             On_Main.DoDraw += PrepareYardDraw;
-            On_Main.DoDraw_WallsAndBlacks += DrawYardWalls;
+            On_Main.DoDraw_Tiles_NonSolid += DrawYardWalls;
             On_Main.DrawWires += DrawYardWires;
             On_Lighting.GetColor_int_int += GetYardLight;
         }
@@ -81,7 +81,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
         objectPersistence = null;
         if (!Main.dedServ) {
             On_Main.DoDraw -= PrepareYardDraw;
-            On_Main.DoDraw_WallsAndBlacks -= DrawYardWalls;
+            On_Main.DoDraw_Tiles_NonSolid -= DrawYardWalls;
             On_Main.DrawWires -= DrawYardWires;
             On_Lighting.GetColor_int_int -= GetYardLight;
         }
@@ -496,7 +496,7 @@ public sealed partial class YardSystem : ModSystem, IYardHost, IYardRegistry
         ModContent.GetInstance<YardCameraSystem>().Draw(orig, self, gameTime);
     }
 
-    private void DrawYardWalls(On_Main.orig_DoDraw_WallsAndBlacks orig, Main self)
+    private void DrawYardWalls(On_Main.orig_DoDraw_Tiles_NonSolid orig, Main self)
     {
         orig(self);
         YardRenderer.DrawWalls(this);

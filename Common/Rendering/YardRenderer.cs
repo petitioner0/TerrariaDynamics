@@ -73,9 +73,9 @@ internal static class YardRenderer
         YardTreeRenderer.DrawFoliage(context, visible);
     }
 
-    // Called after DoDraw_WallsAndBlacks, while its world SpriteBatch is active.
-    // Draw directly after compositing the vanilla wall target, so this works with
-    // both direct drawing and render targets, and never overlays foreground tiles.
+    // Called after DoDraw_Tiles_NonSolid, with its world SpriteBatch active.
+    // World tree trunks and foliage have finished in both direct and cached
+    // drawing; solid terrain and the Yard's own foreground still draw over walls.
     public static void DrawWalls(YardSystem system)
     {
         if (Main.gameMenu || Main.dedServ || !system.RenderEnabled)
