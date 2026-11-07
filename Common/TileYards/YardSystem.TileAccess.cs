@@ -10,6 +10,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using TerrariaDynamics.Common.Storage;
+using TerrariaDynamics.Common.WorldEditing;
 
 namespace TerrariaDynamics.Common.TileYards;
 
@@ -89,7 +90,8 @@ public sealed partial class YardSystem
                         PatchWireBounds(il);
                     else if (type == typeof(Wiring) && name == "CheckLogicGate")
                         PatchLogicGateLimit(il);
-                    PatchNativeTileReads(il);
+                    PatchNativeTileReads(il, type == typeof(WorldGen) && name == "CheckDoorOpen"
+                        ? ReadDoorCheckTile : ReadInteractionTile);
                 }));
         }
     }
@@ -105,6 +107,17 @@ public sealed partial class YardSystem
 
     private bool UpdateStorageMap(On_WorldGen.orig_UpdateMapTile orig, int x, int y, bool addToList) =>
         x < Main.maxTilesX && orig(x, y, addToList);
+
+    private Tile ReadDoorCheckTile(ref Tilemap map, int x, int y)
+    {
+        // CheckDoorOpen only reads active/type for the outer column. Derive it
+        // from the stored hinge while retaining vanilla's support checks and
+        // destruction path. All writes still use the normal bounded accessors.
+        if (interactionYard != null && YardDoorGeometry.TryGetOverhangHinge(map,
+            interactionYard.Bounds, x, y, out Point hinge))
+            return ReadInteractionTile(ref map, hinge.X, hinge.Y);
+        return ReadInteractionTile(ref map, x, y);
+    }
 
     // Preserve every vanilla branch and its local initialization. Add a second
     // successful path only for a loaded Yard; never enlarge Main.maxTilesX/Y.
@@ -188,13 +201,15 @@ public sealed partial class YardSystem
         cursor.EmitDelegate<Func<int, int>>(limit => interactionYard?.Bounds.Bottom ?? limit);
     }
 
-    private void PatchNativeTileReads(ILContext il)
+    private void PatchNativeTileReads(ILContext il) => PatchNativeTileReads(il, ReadInteractionTile);
+
+    private void PatchNativeTileReads(ILContext il, TileReader readTile)
     {
         var cursor = new ILCursor(il);
         while (cursor.TryGotoNext(MoveType.Before, i => i.MatchCall<Tilemap>("get_Item")
             && ((Mono.Cecil.MethodReference)i.Operand).Parameters.Count == 2)) {
             cursor.Remove();
-            cursor.EmitDelegate<TileReader>(ReadInteractionTile);
+            cursor.EmitDelegate(readTile);
         }
         cursor.Index = 0;
         while (cursor.TryGotoNext(MoveType.Before, i => i.MatchCall<Tilemap>("get_Item")
@@ -202,9 +217,9 @@ public sealed partial class YardSystem
             string parameter = ((Mono.Cecil.MethodReference)cursor.Next.Operand).Parameters[0].ParameterType.FullName;
             cursor.Remove();
             if (parameter == typeof(Point).FullName)
-                cursor.EmitDelegate<PointTileReader>((ref Tilemap map, Point point) => ReadInteractionTile(ref map, point.X, point.Y));
+                cursor.EmitDelegate<PointTileReader>((ref Tilemap map, Point point) => readTile(ref map, point.X, point.Y));
             else if (parameter == typeof(Point16).FullName)
-                cursor.EmitDelegate<Point16TileReader>((ref Tilemap map, Point16 point) => ReadInteractionTile(ref map, point.X, point.Y));
+                cursor.EmitDelegate<Point16TileReader>((ref Tilemap map, Point16 point) => readTile(ref map, point.X, point.Y));
             else
                 throw new NotSupportedException($"Unsupported Tilemap index in {il.Method.FullName}.");
         }

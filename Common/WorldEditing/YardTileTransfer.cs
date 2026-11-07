@@ -78,6 +78,16 @@ internal static class YardTileTransfer
                 map[cells[i].Destination.X, cells[i].Destination.Y].ClearEverything();
             throw;
         }
+        // A rendered door overhang has no outer column to transfer. Close it in
+        // the destination so vanilla receives a complete door within the same
+        // placement rectangle. Do this only after the transfer has committed.
+        foreach (var cell in cells) {
+            Tile tile = map[cell.Destination.X, cell.Destination.Y];
+            if (YardDoorGeometry.OverhangDirection(placedBounds, cell.Destination.X, tile) == 0)
+                continue;
+            tile.TileType = TileID.ClosedDoor;
+            tile.TileFrameX = (short)(tile.TileFrameX / 72 * 54);
+        }
         objects?.Commit();
         return true;
     }

@@ -9,6 +9,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using TerrariaDynamics.Common.Players;
 using TerrariaDynamics.Common.TileYards;
+using TerrariaDynamics.Common.WorldEditing;
 using TerrariaDynamics.Content.Tiles;
 
 namespace TerrariaDynamics.Common.Rendering;
@@ -68,6 +69,9 @@ internal static class YardRenderer
                 if (sway.TryDraw(tile, x, y))
                     continue;
                 DrawTile(context, tile, x, y);
+                int overhang = YardDoorGeometry.OverhangDirection(region.Bounds, x, tile);
+                if (overhang != 0)
+                    DrawTile(context, tile, x, y, doorPartOffset: overhang);
             }
         }
         YardTreeRenderer.DrawFoliage(context, visible);
@@ -168,7 +172,7 @@ internal static class YardRenderer
     }
 
     internal static void DrawTile(YardRenderContext context, Tile tile, int yardX, int yardY,
-        YardSwayPose? sway = null)
+        YardSwayPose? sway = null, int doorPartOffset = 0)
     {
         Main.instance.LoadTiles(tile.TileType);
         Texture2D texture = TextureAssets.Tile[tile.TileType].Value;
@@ -189,7 +193,9 @@ internal static class YardRenderer
             && stabilizer.ActiveTexture(yardX, yardY) is Texture2D stabilizerTexture)
             texture = stabilizerTexture;
 
-        short frameX = tile.TileFrameX;
+        // The extra door column uses the hinge's paint/light and a neighboring
+        // sprite frame. Never query or temporarily write a tile outside the Yard.
+        short frameX = (short)(tile.TileFrameX + doorPartOffset * 18);
         short frameY = tile.TileFrameY;
         // Prepare the cache before vanilla's helper performs its own glow reads.
         Color light = context.Light(yardX, yardY);
@@ -203,6 +209,7 @@ internal static class YardRenderer
         if (tile.IsActuated)
             color *= 0.4f;
         Vector2 position = context.LocalPixels(yardX, yardY) + new Vector2(-(width - 16) / 2f, top + halfHeight);
+        position.X += doorPartOffset * YardCoordinates.TileSize;
         var source = new Rectangle(frameX + addX, frameY + addY, width, height - halfHeight);
         if (source.X < 0 || source.Y < 0 || source.Right > texture.Width || source.Bottom > texture.Height
             || source.Width <= 0 || source.Height <= 0)

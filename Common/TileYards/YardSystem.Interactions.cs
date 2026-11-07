@@ -101,10 +101,16 @@ public sealed partial class YardSystem
         // The last drawn Yard wins when visible tiles overlap. Air never masks
         // another Yard or a world tile behind it.
         foreach (Yard yard in regions.Values) {
-            if (yard.IsLoaded && yard.RenderCoordinates.TryWorldToStorageTile(Main.MouseWorld, out Point cell)
-                && Main.tile[cell.X, cell.Y].HasTile) {
+            if (!yard.IsLoaded)
+                continue;
+            Point cell = yard.RenderCoordinates.WorldToStorageTile(Main.MouseWorld);
+            if (yard.Bounds.Contains(cell) && Main.tile[cell.X, cell.Y].HasTile) {
                 hit = yard;
                 target = cell;
+            }
+            else if (YardDoorGeometry.TryGetOverhangHinge(Main.tile, yard.Bounds, cell.X, cell.Y, out Point hinge)) {
+                hit = yard;
+                target = hinge;
             }
         }
         if (hit == null) {
@@ -245,7 +251,12 @@ public sealed partial class YardSystem
             || !InYardReach(player, yard, new Point(x, y), TileReachCheckSettings.Simple))
             return;
         Point local = yard.Coordinates.StorageToLocalTile(new Point(x, y));
-        Vector2 localMouse = (ReferenceEquals(clickYard, yard) ? clickPose : yard.PlayerCoordinates).WorldToLocal(Main.MouseWorld);
+        YardCoordinates pose = ReferenceEquals(clickYard, yard) ? clickPose : yard.PlayerCoordinates;
+        Vector2 localMouse = pose.WorldToLocal(Main.MouseWorld);
+        Point mouseCell = pose.WorldToStorageTile(Main.MouseWorld);
+        if (YardDoorGeometry.TryGetOverhangHinge(Main.tile, yard.Bounds, mouseCell.X, mouseCell.Y, out Point hinge)
+            && hinge == new Point(x, y))
+            localMouse.X += (hinge.X - mouseCell.X) * YardCoordinates.TileSize;
         if (Main.netMode == NetmodeID.MultiplayerClient) {
             if (!IsSynchronized)
                 return;
