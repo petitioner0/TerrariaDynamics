@@ -1,5 +1,5 @@
 displayName = Terraria: Dynamics
 author = Petitioner0
-version = 0.1
+version = 0.2
 dllReferences = Box2D.NET
 buildIgnore = docs/*, **/*.csproj, **/*.user, obj/*, bin/*
